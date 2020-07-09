@@ -214,6 +214,7 @@ func (st *Local) AcquireSector(ctx context.Context, sid abi.SectorID, spt abi.Re
 		}
 
 		si, err := st.index.StorageFindSector(ctx, sid, fileType, false)
+		log.Warnw("storage sectors ", si, sid)
 		if err != nil {
 			log.Warnf("finding existing sector %d(t:%d) failed: %+v", sid, fileType, err)
 			continue
@@ -244,6 +245,7 @@ func (st *Local) AcquireSector(ctx context.Context, sid abi.SectorID, spt abi.Re
 		}
 
 		sis, err := st.index.StorageBestAlloc(ctx, fileType, spt, pathType)
+		log.Warnw("best storages: ", sis, sid)
 		if err != nil {
 			return SectorPaths{}, SectorPaths{}, xerrors.Errorf("finding best storage for allocating : %w", err)
 		}
@@ -273,6 +275,7 @@ func (st *Local) AcquireSector(ctx context.Context, sid abi.SectorID, spt abi.Re
 
 			best = filepath.Join(p.local, fileType.String(), SectorName(sid))
 			bestID = si.ID
+			log.Warnw("get best for: ", sid, best, bestID)
 			break
 		}
 
