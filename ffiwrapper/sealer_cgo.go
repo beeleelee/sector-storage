@@ -399,7 +399,7 @@ func (sb *Sealer) SealPreCommit1(ctx context.Context, sector abi.SectorID, ticke
 	log.Warnf("SealPreCommit1 start for %v", sector)
 	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTUnsealed, stores.FTSealed|stores.FTCache, true)
-	log.Warnw(paths)
+	log.Warnw("acquired sector path: ", paths)
 	if err != nil {
 		return nil, xerrors.Errorf("acquiring sector paths: %w", err)
 	}
@@ -461,7 +461,7 @@ func (sb *Sealer) SealPreCommit2(ctx context.Context, sector abi.SectorID, phase
 	log.Warnf("SealPreCommit2 start for %v", sector)
 	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTSealed|stores.FTCache, 0, true)
-	log.Warnw(paths)
+	log.Warnw("acquired sector path: ", paths)
 	if err != nil {
 		return storage.SectorCids{}, xerrors.Errorf("acquiring sector paths: %w", err)
 	}
@@ -483,7 +483,7 @@ func (sb *Sealer) SealCommit1(ctx context.Context, sector abi.SectorID, ticket a
 	log.Warnf("SealCommit1 start for %v", sector)
 	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTSealed|stores.FTCache, 0, true)
-	log.Warnw(paths)
+	log.Warnw("acquired sector path: ", paths)
 	if err != nil {
 		return nil, xerrors.Errorf("acquire sector paths: %w", err)
 	}
