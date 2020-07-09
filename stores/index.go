@@ -297,6 +297,8 @@ func (i *Index) StorageFindSector(ctx context.Context, s abi.SectorID, ft Sector
 		})
 	}
 
+	allowFetch = false
+
 	if allowFetch {
 		for id, st := range i.stores {
 			if _, ok := storageIDs[id]; ok {
