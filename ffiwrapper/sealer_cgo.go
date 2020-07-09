@@ -10,6 +10,7 @@ import (
 	"math/bits"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
@@ -395,7 +396,10 @@ func (sb *Sealer) ReadPiece(ctx context.Context, writer io.Writer, sector abi.Se
 }
 
 func (sb *Sealer) SealPreCommit1(ctx context.Context, sector abi.SectorID, ticket abi.SealRandomness, pieces []abi.PieceInfo) (out storage.PreCommit1Out, err error) {
+	log.Warnf("SealPreCommit1 start for %v", sector)
+	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTUnsealed, stores.FTSealed|stores.FTCache, true)
+	log.Warnw(paths)
 	if err != nil {
 		return nil, xerrors.Errorf("acquiring sector paths: %w", err)
 	}
@@ -448,11 +452,16 @@ func (sb *Sealer) SealPreCommit1(ctx context.Context, sector abi.SectorID, ticke
 	if err != nil {
 		return nil, xerrors.Errorf("presealing sector %d (%s): %w", sector.Number, paths.Unsealed, err)
 	}
+	endTime := time.Now()
+	log.Warnw("SealPrecommit1 end for", sector, " elapsed: ", endTime.Sub(startTime))
 	return p1o, nil
 }
 
 func (sb *Sealer) SealPreCommit2(ctx context.Context, sector abi.SectorID, phase1Out storage.PreCommit1Out) (storage.SectorCids, error) {
+	log.Warnf("SealPreCommit2 start for %v", sector)
+	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTSealed|stores.FTCache, 0, true)
+	log.Warnw(paths)
 	if err != nil {
 		return storage.SectorCids{}, xerrors.Errorf("acquiring sector paths: %w", err)
 	}
@@ -462,7 +471,8 @@ func (sb *Sealer) SealPreCommit2(ctx context.Context, sector abi.SectorID, phase
 	if err != nil {
 		return storage.SectorCids{}, xerrors.Errorf("presealing sector %d (%s): %w", sector.Number, paths.Unsealed, err)
 	}
-
+	endTime := time.Now()
+	log.Warnw("SealPrecommit2 end for", sector, " elapsed: ", endTime.Sub(startTime))
 	return storage.SectorCids{
 		Unsealed: unsealedCID,
 		Sealed:   sealedCID,
@@ -470,7 +480,10 @@ func (sb *Sealer) SealPreCommit2(ctx context.Context, sector abi.SectorID, phase
 }
 
 func (sb *Sealer) SealCommit1(ctx context.Context, sector abi.SectorID, ticket abi.SealRandomness, seed abi.InteractiveSealRandomness, pieces []abi.PieceInfo, cids storage.SectorCids) (storage.Commit1Out, error) {
+	log.Warnf("SealCommit1 start for %v", sector)
+	startTime := time.Now()
 	paths, done, err := sb.sectors.AcquireSector(ctx, sector, stores.FTSealed|stores.FTCache, 0, true)
+	log.Warnw(paths)
 	if err != nil {
 		return nil, xerrors.Errorf("acquire sector paths: %w", err)
 	}
@@ -493,11 +506,18 @@ func (sb *Sealer) SealCommit1(ctx context.Context, sector abi.SectorID, ticket a
 
 		return nil, xerrors.Errorf("StandaloneSealCommit: %w", err)
 	}
+	endTime := time.Now()
+	log.Warnw("SealCommit1 end for", sector, " elapsed: ", endTime.Sub(startTime))
 	return output, nil
 }
 
 func (sb *Sealer) SealCommit2(ctx context.Context, sector abi.SectorID, phase1Out storage.Commit1Out) (storage.Proof, error) {
-	return ffi.SealCommitPhase2(phase1Out, sector.Number, sector.Miner)
+	log.Warnf("SealCommit2 start for %v", sector)
+	startTime := time.Now()
+	output, err := ffi.SealCommitPhase2(phase1Out, sector.Number, sector.Miner)
+	endTime := time.Now()
+	log.Warnw("SealCommit2 end for", sector, " elapsed: ", endTime.Sub(startTime))
+	return output, err
 }
 
 func (sb *Sealer) FinalizeSector(ctx context.Context, sector abi.SectorID, keepUnsealed []storage.Range) error {
