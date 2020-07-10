@@ -4,6 +4,8 @@ package ffiwrapper
 
 import (
 	"context"
+	"time"
+
 	"golang.org/x/xerrors"
 
 	"go.opencensus.io/trace"
@@ -15,20 +17,31 @@ import (
 )
 
 func (sb *Sealer) GenerateWinningPoSt(ctx context.Context, minerID abi.ActorID, sectorInfo []abi.SectorInfo, randomness abi.PoStRandomness) ([]abi.PoStProof, error) {
+	log.Warn("GenerateWinningPoSt start")
+	startTime := time.Now()
+
 	randomness[31] = 0                                                                                                                       // TODO: Not correct, fixme
 	privsectors, skipped, done, err := sb.pubSectorToPriv(ctx, minerID, sectorInfo, nil, abi.RegisteredSealProof.RegisteredWinningPoStProof) // TODO: FAULTS?
 	if err != nil {
 		return nil, err
 	}
 	defer done()
+
+	log.Warnf("winning proof, privsectors: %#v", privsectors)
+
 	if len(skipped) > 0 {
 		return nil, xerrors.Errorf("pubSectorToPriv skipped sectors: %+v", skipped)
 	}
 
-	return ffi.GenerateWinningPoSt(minerID, privsectors, randomness)
+	proofs, err := ffi.GenerateWinningPoSt(minerID, privsectors, randomness)
+	endTime := time.Now()
+	log.Warnf("GenerateWinningPoSt end, elapsed: %v", endTime.Sub(startTime))
+	return proofs, err
 }
 
 func (sb *Sealer) GenerateWindowPoSt(ctx context.Context, minerID abi.ActorID, sectorInfo []abi.SectorInfo, randomness abi.PoStRandomness) ([]abi.PoStProof, []abi.SectorID, error) {
+	log.Warn("GenerateWindowPoSt start")
+	startTime := time.Now()
 	randomness[31] = 0 // TODO: Not correct, fixme
 	privsectors, skipped, done, err := sb.pubSectorToPriv(ctx, minerID, sectorInfo, nil, abi.RegisteredSealProof.RegisteredWindowPoStProof)
 	if err != nil {
@@ -36,7 +49,11 @@ func (sb *Sealer) GenerateWindowPoSt(ctx context.Context, minerID abi.ActorID, s
 	}
 	defer done()
 
+	log.Warnf("window proof, privsectors: %#v", privsectors)
+
 	proof, err := ffi.GenerateWindowPoSt(minerID, privsectors, randomness)
+	endTime := time.Now()
+	log.Warnf("GenerateWindowPoSt end, elapsed: %v", endTime.Sub(startTime))
 	return proof, skipped, err
 }
 
