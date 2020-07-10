@@ -277,7 +277,7 @@ func (st *Local) AcquireSector(ctx context.Context, sid abi.SectorID, spt abi.Re
 
 			best = filepath.Join(p.local, fileType.String(), SectorName(sid))
 			bestID = si.ID
-			log.Warnw("get best for: ", sid, best, bestID)
+			log.Warnf("get best stroage: %v, id: %v,  for: %v", bestsid.Number, bestID, sid.Number)
 			break
 		}
 
